@@ -1,5 +1,6 @@
 /****************************************************************************
- Copyright (c) 2014-2017 Chukong Technologies Inc.
+ Copyright (c) 2014-2016 Chukong Technologies Inc.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos2d-x.org
 
@@ -546,11 +547,11 @@ bool EffectSpriteLamp::init()
         lampEffect->setKBump(2);
         _sprite->setEffect(lampEffect);
         _effect = lampEffect;
-        auto listerner = EventListenerTouchAllAtOnce::create();
-        listerner->onTouchesBegan = CC_CALLBACK_2(EffectSpriteLamp::onTouchesBegan, this);
-        listerner->onTouchesMoved = CC_CALLBACK_2(EffectSpriteLamp::onTouchesMoved, this);
-        listerner->onTouchesEnded = CC_CALLBACK_2(EffectSpriteLamp::onTouchesEnded, this);
-        _eventDispatcher->addEventListenerWithSceneGraphPriority(listerner, this);
+        auto listener = EventListenerTouchAllAtOnce::create();
+        listener->onTouchesBegan = CC_CALLBACK_2(EffectSpriteLamp::onTouchesBegan, this);
+        listener->onTouchesMoved = CC_CALLBACK_2(EffectSpriteLamp::onTouchesMoved, this);
+        listener->onTouchesEnded = CC_CALLBACK_2(EffectSpriteLamp::onTouchesEnded, this);
+        _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
         return true;
     }
     return false;

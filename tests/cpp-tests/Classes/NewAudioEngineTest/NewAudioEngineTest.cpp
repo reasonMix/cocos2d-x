@@ -1,5 +1,6 @@
 /****************************************************************************
- Copyright (c) 2014-2017 Chukong Technologies Inc.
+ Copyright (c) 2014-2016 Chukong Technologies Inc.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos2d-x.org
 
@@ -32,6 +33,7 @@ using namespace cocos2d::experimental;
 
 AudioEngineTests::AudioEngineTests()
 {
+    ADD_TEST_CASE(AudioIssue18597Test);
     ADD_TEST_CASE(AudioIssue11143Test);
     ADD_TEST_CASE(AudioControlTest);
     ADD_TEST_CASE(AudioLoadTest);
@@ -42,10 +44,13 @@ AudioEngineTests::AudioEngineTests()
     ADD_TEST_CASE(AudioPerformanceTest);
     ADD_TEST_CASE(AudioSmallFileTest);
     ADD_TEST_CASE(AudioSmallFile2Test);
+    ADD_TEST_CASE(AudioSmallFile3Test);
     ADD_TEST_CASE(AudioPauseResumeAfterPlay);
     ADD_TEST_CASE(AudioPreloadSameFileMultipleTimes);
     ADD_TEST_CASE(AudioPlayFileInWritablePath);
     ADD_TEST_CASE(AudioIssue16938Test);
+    ADD_TEST_CASE(AudioPlayInFinishedCB);
+    ADD_TEST_CASE(AudioUncacheInFinishedCB);
     
     //FIXME: Please keep AudioSwitchStateTest to the last position since this test case doesn't work well on each platforms.
     ADD_TEST_CASE(AudioSwitchStateTest);
@@ -204,6 +209,12 @@ std::string AudioEngineTestDemo::title() const
     return "New Audio Engine Test";
 }
 
+void AudioEngineTestDemo::onBackCallback(cocos2d::Ref* sender)
+{
+    AudioEngine::end();
+    TestCase::onBackCallback(sender);
+}
+
 // AudioControlTest
 bool AudioControlTest::init()
 {
@@ -242,7 +253,7 @@ bool AudioControlTest::init()
                         _playOverLabel->setVisible(false);
                     }, 2.0f, "hide_play_over_label");
                     
-                    assert(!_isStopped); // Stop audio should not trigger finshed callback
+                    assert(!_isStopped); // Stop audio should not trigger finished callback
                     _audioID = AudioEngine::INVALID_AUDIO_ID;
                     ((TextButton*)_playItem)->setEnabled(true);
                     
@@ -642,6 +653,59 @@ std::string LargeAudioFileTest::title() const
     return "Test large audio file";
 }
 
+bool AudioIssue18597Test::init()
+{
+    if (AudioEngineTestDemo::init())
+    {
+        auto& layerSize = this->getContentSize();
+
+        //test case for https://github.com/cocos2d/cocos2d-x/issues/18597
+        this->schedule([=](float dt)
+                       {
+                           CCLOG("issues 18597 audio crash test");
+                           for (int i = 0; i< 2;++i)
+                           {
+                               auto id = AudioEngine::play2d("audio/MUS_BGM_Battle_Round1_v1.caf", true, 1.0f);
+                               this->runAction(Sequence::create(
+                                                                DelayTime::create(8.0f),
+                                                                CallFunc::create([=]()
+                                                                                 {
+                                                                                     AudioEngine::stop(id);
+                                                                                 }),
+                                                                nullptr
+                                                                ));
+                           }
+                       }, 2.0, 10000, 0.0, "audio test");
+        // add label to show the side effect of "UnqueueBuffers Before alSourceStop"
+        _time = 0.0;
+        auto labelTime = Label::createWithBMFont("fonts/bitmapFontTest2.fnt", "time: ");
+        labelTime->setPosition(layerSize.width * 0.5f, layerSize.height * 0.5f);
+        labelTime->setTag(999);
+        this->addChild(labelTime);
+        // update label quickly
+        this->schedule([=](float dt){
+            _time += dt;
+            char timeString[20] = {0};
+            sprintf(timeString, "Time %2.2f", _time);
+            dynamic_cast<Label *>(this->getChildByTag(999))->setString(timeString);
+        }, 0.05, 1000000, 0, "update label quickly");
+
+        return true;
+    }
+
+    return false;
+}
+
+std::string AudioIssue18597Test::title() const
+{
+    return "Test for issue 18597";
+}
+
+std::string AudioIssue18597Test::subtitle() const
+{
+    return "no crash for more than 10 minutes";
+}
+
 bool AudioIssue11143Test::init()
 {
     if (AudioEngineTestDemo::init())
@@ -788,7 +852,7 @@ bool AudioSwitchStateTest::init()
             AudioEngine::play2d("audio/SoundEffectsFX009/FX082.mp3");
             AudioEngine::play2d("audio/LuckyDay.mp3");
             
-        }, 0.1f, "AudioSwitchStateTest");
+        }, 0.01f, "AudioSwitchStateTest");
         
         return true;
     }
@@ -847,6 +911,26 @@ std::string AudioSmallFile2Test::title() const
 std::string AudioSmallFile2Test::subtitle() const
 {
     return "Should not crash and should not have rasp!";
+}
+
+/////////////////////////////////////////////////////////////////////////
+void AudioSmallFile3Test::onEnter()
+{
+    AudioEngineTestDemo::onEnter();
+
+    schedule([](float dt){
+        AudioEngine::play2d("audio/SmallFile3.mp3");
+    }, 0.5f, "smallfile3");
+}
+
+std::string AudioSmallFile3Test::title() const
+{
+    return "Play small mp3 file 3";
+}
+
+std::string AudioSmallFile3Test::subtitle() const
+{
+    return "Should not crash!";
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -931,7 +1015,7 @@ void AudioPlayFileInWritablePath::onEnter()
     std::string musicFile = "background.mp3";
     std::string saveFilePath = writablePath + "background_in_writable_dir.mp3";
     
-    _oldSearchPaths = fileUtils->getSearchPaths();
+    _oldSearchPaths = fileUtils->getOriginalSearchPaths();
     fileUtils->addSearchPath(writablePath, true);
 
     if (!fileUtils->isFileExist(saveFilePath))
@@ -964,3 +1048,85 @@ std::string AudioPlayFileInWritablePath::subtitle() const
 {
     return "Could play audio";
 }
+
+//
+void AudioPlayInFinishedCB::onEnter()
+{
+    AudioEngineTestDemo::onEnter();
+
+    auto item = MenuItemFont::create("Play 3 files one by one", [this](Ref* sender){
+        playMusic("background.mp3");
+        playMusic("background.mp3");
+        playMusic("background.mp3");
+    });
+
+    item->setPosition(VisibleRect::center());
+
+    auto menu = Menu::create(item, nullptr);
+    menu->setPosition(Vec2::ANCHOR_BOTTOM_LEFT);
+    addChild(menu);
+}
+
+void AudioPlayInFinishedCB::onExit()
+{
+    AudioEngineTestDemo::onExit();
+}
+
+std::string AudioPlayInFinishedCB::title() const
+{
+    return "Click menu item to play 3 audio files";
+}
+
+std::string AudioPlayInFinishedCB::subtitle() const
+{
+    return "After played over, click again, should also hear 3 audios";
+}
+
+void AudioPlayInFinishedCB::doPlay(const std::string& filename)
+{
+    int playID = AudioEngine::play2d(filename, false, 1);
+    AudioEngine::setFinishCallback(playID, [this](int finishID, const std::string& file){
+        _playList.pop_front();
+        log("finish music %s",file.c_str());
+        if (!_playList.empty()) {
+            const std::string& name = _playList.front();
+            doPlay(name);
+        }
+    });
+}
+
+void AudioPlayInFinishedCB::playMusic(const std::string& filename)
+{
+    _playList.push_back(filename);
+    if (_playList.size() == 1) {
+        doPlay(filename);
+    }
+}
+
+//
+void AudioUncacheInFinishedCB::onEnter()
+{
+    AudioEngineTestDemo::onEnter();
+
+    int id = AudioEngine::play2d("background.mp3");
+    AudioEngine::setFinishCallback(id, [](int i, const std::string& str){
+        AudioEngine::uncacheAll();
+    });
+}
+
+void AudioUncacheInFinishedCB::onExit()
+{
+    AudioEngineTestDemo::onExit();
+}
+
+std::string AudioUncacheInFinishedCB::title() const
+{
+    return "UncacheAll in finshed callback";
+}
+
+std::string AudioUncacheInFinishedCB::subtitle() const
+{
+    return "Should not crash";
+}
+
+

@@ -1,7 +1,8 @@
 /****************************************************************************
  Copyright (c) 2008-2010 Ricardo Quesada
  Copyright (c) 2011-2012 cocos2d-x.org
- Copyright (c) 2013-2017 Chukong Technologies Inc.
+ Copyright (c) 2013-2016 Chukong Technologies Inc.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos2d-x.org
 
@@ -365,11 +366,11 @@ var Camera3DTest = (function(){
             layer3D.setCameraMask(2);
         },
 
-        addNewSpriteWithCoords:function(postion, file, playAnimation, scale, bindCamera){
+        addNewSpriteWithCoords:function(position, file, playAnimation, scale, bindCamera){
             var sprite = new jsb.Sprite3D(file);
             this._layer3D.addChild(sprite);
             var globalZOrder = sprite.getGlobalZOrder();
-            sprite.setPosition3D(postion);
+            sprite.setPosition3D(position);
             sprite.setGlobalZOrder(globalZOrder);
             if(playAnimation){
                 var animation = new jsb.Animation3D(file, "Take 001");
@@ -1103,7 +1104,6 @@ var FogTestDemo = Camera3DTestDemo.extend({
 
     ctor:function(){
         this._super();
-        cc.director.setClearColor(cc.color(128, 128, 128));
 
         cc.eventManager.addListener({
             event:cc.EventListener.TOUCH_ALL_AT_ONCE,
@@ -1189,6 +1189,11 @@ var FogTestDemo = Camera3DTestDemo.extend({
         this._camera.lookAt(cc.math.vec3(0, 0, 0), cc.math.vec3(0, 1, 0));
         layer3D.addChild(this._camera);
         layer3D.setCameraMask(2);
+    },
+
+    onEnter: function() {
+        this._super();
+        cc.director.setClearColor(cc.color(128, 128, 128));
     },
 
     onExit:function(){

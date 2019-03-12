@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2013-2017 Chukong Technologies Inc.
+ * Copyright (c) 2013-2016 Chukong Technologies Inc.
+ * Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +27,7 @@
 
 // CCConfig.js
 //
-cc.ENGINE_VERSION = "Cocos2d-JS v3.14";
+cc.ENGINE_VERSION = "Cocos2d-JS v3.17";
 
 cc.FIX_ARTIFACTS_BY_STRECHING_TEXEL = 0;
 cc.DIRECTOR_STATS_POSITION = {x: 0, y: 0};
@@ -299,6 +300,12 @@ cc.INVALID_INDEX = -1;
  * @type Number
  */
 cc.PI = Math.PI;
+
+/**
+ * @constant
+ * @type Number
+ */
+cc.PI2 = Math.PI * 2;
 
 /**
  * @constant
@@ -2566,13 +2573,21 @@ cc.Layer.prototype.isBaked = function() {return false;};
 //
 cc.RenderTexture.prototype._beginWithClear = cc.RenderTexture.prototype.beginWithClear;
 cc.RenderTexture.prototype.beginWithClear = function(r, g, b, a, depthValue, stencilValue) {
-    arguments[0] /= 255;
-    arguments[1] /= 255;
-    arguments[2] /= 255;
-    arguments[3] /= 255;
-    this._beginWithClear.apply(this, arguments);
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    a /= 255;
+    this._beginWithClear(r, g, b, a, depthValue, stencilValue);
 };
 
+cc.RenderTexture.prototype._clear = cc.RenderTexture.prototype.clear;
+cc.RenderTexture.prototype.clear = function(r, g, b, a) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    a /= 255;
+    this._clear(r, g, b, a);
+};
 
 //
 // Texture2D setTexParameters

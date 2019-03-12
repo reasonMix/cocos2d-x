@@ -1,6 +1,7 @@
 /*
  * Created by James Chen
- * Copyright (c) 2013-2017 Chukong Technologies Inc.
+ * Copyright (c) 2013-2016 Chukong Technologies Inc.
+ * Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -307,6 +308,7 @@ bool js_cocos2dx_extension_WebSocket_constructor(JSContext *cx, uint32_t argc, j
 
         JS::RootedObject proto(cx, js_cocos2dx_websocket_prototype);
         JS::RootedObject obj(cx, JS_NewObject(cx, js_cocos2dx_websocket_class, proto, JS::NullPtr()));
+        //JS::RootedObject obj(cx, JS_NewObjectForConstructor(cx, js_cocos2dx_websocket_class, args));
 
         WebSocket* cobj = nullptr;
         if (argc >= 2)

@@ -1,6 +1,7 @@
 /****************************************************************************
  Copyright (c) 2010-2012 cocos2d-x.org
- Copyright (c) 2013-2017 Chukong Technologies Inc.
+ Copyright (c) 2013-2016 Chukong Technologies Inc.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos2d-x.org
 
@@ -27,8 +28,7 @@
 
  ****************************************************************************/
 
-#ifndef __CC_WEBSOCKET_H__
-#define __CC_WEBSOCKET_H__
+#pragma once
 
 #include <string>
 #include <vector>
@@ -231,7 +231,7 @@ private:
     int onClientWritable();
     int onClientReceivedData(void* in, ssize_t len);
     int onConnectionOpened();
-    int onConnectionError();
+    int onConnectionError(void* in, ssize_t len);
     int onConnectionClosed();
 
     struct lws_vhost* createVhost(struct lws_protocols* protocols, int& sslConnection);
@@ -255,6 +255,7 @@ private:
 
     std::mutex _closeMutex;
     std::condition_variable _closeCondition;
+    std::vector<char*> _protocolNames;
 
     enum class CloseState
     {
@@ -273,11 +274,10 @@ private:
     friend class WebSocketCallbackWrapper;
 };
 
-}
+} // namespace network {
 
 NS_CC_END
 
 // end group
 /// @}
 
-#endif /* defined(__CC_JSB_WEBSOCKET_H__) */

@@ -1,6 +1,7 @@
 /****************************************************************************
  Copyright (c) 2011-2012 cocos2d-x.org
- Copyright (c) 2013-2017 Chukong Technologies Inc.
+ Copyright (c) 2013-2016 Chukong Technologies Inc.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos2d-x.org
 
@@ -138,7 +139,7 @@ var UITextTest_TTF = UIMainLayer.extend({
 });
 
 //2015-01-14
-var UITextTest_IgnoreConentSize = UIMainLayer.extend({
+var UITextTest_IgnoreContentSize = UIMainLayer.extend({
 
     init: function(){
         if(this._super()){

@@ -1,7 +1,8 @@
 /****************************************************************************
  Copyright (c) 2008-2010 Ricardo Quesada
  Copyright (c) 2011-2012 cocos2d-x.org
- Copyright (c) 2013-2017 Chukong Technologies Inc.
+ Copyright (c) 2013-2016 Chukong Technologies Inc.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -147,7 +148,7 @@ var RenderTextureSave = RenderTextureBaseLayer.extend({
     },
 
     clearCB:function (sender) {
-        this._target.clear(Math.random(), Math.random(), Math.random(), 1);
+        this._target.clear(Math.random() * 255, Math.random() * 255, Math.random() * 255, 255);
     },
 
     drawInLocation:function (location) {
