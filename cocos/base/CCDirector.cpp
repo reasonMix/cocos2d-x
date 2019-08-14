@@ -86,7 +86,7 @@ NS_CC_BEGIN
 static Director *s_SharedDirector = nullptr;
 
 #define kDefaultFPS        60  // 60 frames per second
-extern const char* cocos2dVersion(void);
+extern const char* cocos2dVersion();
 
 const char *Director::EVENT_BEFORE_SET_NEXT_SCENE = "director_before_set_next_scene";
 const char *Director::EVENT_AFTER_SET_NEXT_SCENE = "director_after_set_next_scene";
@@ -202,7 +202,7 @@ Director::~Director()
 #endif
 }
 
-void Director::setDefaultValues(void)
+void Director::setDefaultValues()
 {
     Configuration *conf = Configuration::getInstance();
 
@@ -689,7 +689,7 @@ void Director::setProjection(Projection projection)
     _eventDispatcher->dispatchEvent(_eventProjectionChanged);
 }
 
-void Director::purgeCachedData(void)
+void Director::purgeCachedData()
 {
     FontFNT::purgeCachedData();
     FontAtlasCache::purgeCachedData();
@@ -706,7 +706,7 @@ void Director::purgeCachedData(void)
     FileUtils::getInstance()->purgeCachedEntries();
 }
 
-float Director::getZEye(void) const
+float Director::getZEye() const
 {
     return (_winSizeInPoints.height / 1.154700538379252f);//(2 * tanf(M_PI/6))
 }
@@ -733,6 +733,11 @@ void Director::setDepthTest(bool on)
 void Director::setClearColor(const Color4F& clearColor)
 {
     _renderer->setClearColor(clearColor);
+}
+
+const Color4F& Director::getClearColor() const
+{
+    return _renderer->getClearColor();
 }
 
 static void GLToClipTransform(Mat4 *transformOut)
@@ -777,24 +782,24 @@ Vec2 Director::convertToUI(const Vec2& glPoint)
     Vec4 glCoord(glPoint.x, glPoint.y, 0.0, 1);
     transform.transformVector(glCoord, &clipCoord);
 
-	/*
-	BUG-FIX #5506
+    /*
+    BUG-FIX #5506
 
-	a = (Vx, Vy, Vz, 1)
-	b = (a×M)T
-	Out = 1 ⁄ bw(bx, by, bz)
-	*/
+    a = (Vx, Vy, Vz, 1)
+    b = (a×M)T
+    Out = 1 ⁄ bw(bx, by, bz)
+    */
 	
-	clipCoord.x = clipCoord.x / clipCoord.w;
-	clipCoord.y = clipCoord.y / clipCoord.w;
-	clipCoord.z = clipCoord.z / clipCoord.w;
+    clipCoord.x = clipCoord.x / clipCoord.w;
+    clipCoord.y = clipCoord.y / clipCoord.w;
+    clipCoord.z = clipCoord.z / clipCoord.w;
 
     Size glSize = _openGLView->getDesignResolutionSize();
     float factor = 1.0f / glCoord.w;
     return Vec2(glSize.width * (clipCoord.x * 0.5f + 0.5f) * factor, glSize.height * (-clipCoord.y * 0.5f + 0.5f) * factor);
 }
 
-const Size& Director::getWinSize(void) const
+const Size& Director::getWinSize() const
 {
     return _winSizeInPoints;
 }
@@ -907,7 +912,7 @@ void Director::pushScene(Scene *scene)
     _nextScene = scene;
 }
 
-void Director::popScene(void)
+void Director::popScene()
 {
     CCASSERT(_runningScene != nullptr, "running scene should not null");
     
@@ -932,7 +937,7 @@ void Director::popScene(void)
     }
 }
 
-void Director::popToRootScene(void)
+void Director::popToRootScene()
 {
     popToSceneStackLevel(1);
 }
@@ -1060,7 +1065,11 @@ void Director::reset()
         }
     }
 #endif // CC_ENABLE_GC_FOR_NATIVE_OBJECTS
-    _scenesStack.clear();
+
+    while (!_scenesStack.empty())
+    {
+        _scenesStack.popBack();
+    }
     
     stopAnimation();
     
@@ -1334,8 +1343,7 @@ void Director::createStatsLabel()
     Image* image = new (std::nothrow) Image();
     bool isOK = image ? image->initWithImageData(data, dataLength) : false;
     if (! isOK) {
-        if(image)
-            delete image;
+        delete image;
         CCLOGERROR("%s", "Fails: init fps_images");
         return;
     }
@@ -1393,18 +1401,19 @@ void Director::setContentScaleFactor(float scaleFactor)
 
 void Director::setNotificationNode(Node *node)
 {
-	if (_notificationNode != nullptr){
-		_notificationNode->onExitTransitionDidStart();
-		_notificationNode->onExit();
-		_notificationNode->cleanup();
-	}
-	CC_SAFE_RELEASE(_notificationNode);
+    if (_notificationNode != nullptr)
+    {
+        _notificationNode->onExitTransitionDidStart();
+        _notificationNode->onExit();
+        _notificationNode->cleanup();
+    }
+    CC_SAFE_RELEASE(_notificationNode);
 
-	_notificationNode = node;
-	if (node == nullptr)
-		return;
-	_notificationNode->onEnter();
-	_notificationNode->onEnterTransitionDidFinish();
+    _notificationNode = node;
+    if (node == nullptr)
+        return;
+    _notificationNode->onEnter();
+    _notificationNode->onEnterTransitionDidFinish();
     CC_SAFE_RETAIN(_notificationNode);
 }
 

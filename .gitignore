@@ -182,5 +182,4 @@ temp/
 
 # external libs zip
 *.zip
-.tags
-.tags1
+**/simulator/
